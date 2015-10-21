@@ -115,8 +115,10 @@ GType soup_auth_digest_get_type (void);
 #define SOUP_TYPE_AUTH_NTLM   (soup_auth_ntlm_get_type ())
 SOUP_AVAILABLE_IN_2_4
 GType soup_auth_ntlm_get_type   (void);
+#if HAVE_GSSAPI
 #define SOUP_TYPE_AUTH_NEGOTIATE  (soup_auth_negotiate_get_type ())
 GType soup_auth_negotiate_get_type   (void);
+#endif
 
 /* Deprecated SoupPasswordManager-related APIs: all are now no-ops */
 SOUP_AVAILABLE_IN_2_28
