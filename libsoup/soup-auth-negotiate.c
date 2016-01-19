@@ -41,6 +41,7 @@ typedef struct {
 	gss_name_t   server_name;
 
 	gchar *response_header;
+	gboolean initialized;
 } SoupNegotiateConnectionState;
 
 static gboolean soup_gss_build_response (SoupNegotiateConnectionState *conn,
@@ -273,7 +274,8 @@ soup_auth_negotiate_class_init (SoupAuthNegotiateClass *auth_negotiate_class)
 static gboolean
 soup_gss_build_response (SoupNegotiateConnectionState *conn, SoupAuth *auth, GError **err)
 {
-	if (!soup_gss_client_init (conn, soup_auth_get_host (SOUP_AUTH (auth)), err))
+	if (!conn->initialized &&
+	    !soup_gss_client_init (conn, soup_auth_get_host (SOUP_AUTH (auth)), err))
 		return FALSE;
 
 	if (soup_gss_client_step (conn, "", err) != AUTH_GSS_CONTINUE)
@@ -468,6 +470,7 @@ soup_gss_client_init (SoupNegotiateConnectionState *conn, const gchar *host, GEr
 		goto out;
 	}
 
+	conn->initialized = TRUE;
 	ret = TRUE;
 out:
 	g_free (h);
