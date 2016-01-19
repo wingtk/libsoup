@@ -84,6 +84,11 @@ soup_auth_negotiate_free_connection_state (SoupConnectionAuth *auth,
 	g_free (conn->response_header);
 }
 
+static void
+remove_server_response_handler (SoupMessage *msg, gpointer state);
+static void
+check_server_response (SoupMessage *msg, gpointer state);
+
 static gboolean
 soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *msg,
 				       const char *header, gpointer state)
@@ -97,26 +102,42 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 		return FALSE;
 	}
 
-	if (conn->state > SOUP_NEGOTIATE_RECEIVED_CHALLENGE) {
-		/* We already authenticated, but then got another 401.
-		 * That means "permission denied", so don't try to
-		 * authenticate again.
-		 */
-		conn->state = SOUP_NEGOTIATE_FAILED;
-
-		return FALSE;
-	}
-
-	/* Found negotiate header, start negotiate */
+	/* Found negotiate header with no token, start negotiate */
 	if (strcmp (header, "Negotiate") == 0) {
+		if (conn->state > SOUP_NEGOTIATE_RECEIVED_CHALLENGE) {
+			/* If we were already negotiating and we get a 401
+			 * with no token, that means we failed. */
+			conn->state = SOUP_NEGOTIATE_FAILED;
+			return FALSE;
+		}
 		conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
-		if (soup_gss_build_response (conn, SOUP_AUTH (auth), &err))
+		if (soup_gss_build_response (conn, SOUP_AUTH (auth), &err)) {
+			g_signal_connect (msg,
+					  "finished",
+					  G_CALLBACK (remove_server_response_handler),
+					  conn);
+
+			/* Register the callback just once */
+			if (priv->got_headers_signal_id == 0) {
+				/* Wait for the 2xx response to verify server response */
+				priv->got_headers_signal_id = g_signal_connect (msg,
+										"got_headers",
+										G_CALLBACK (check_server_response),
+										conn);
+			}
 			return TRUE;
-		else {
+		} else {
 			/* FIXME: report further upward via
 			 * soup_message_get_error_message  */
 			g_warning ("gssapi step failed: %s", err->message);
 		}
+	} else if (!strncmp(header, "Negotiate ", 10)) {
+		if (soup_gss_client_step (conn, header + 10, &err) == AUTH_GSS_CONTINUE) {
+			conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
+			return TRUE;
+		}
+	} else {
+		g_warning("Bogus hdr '%s'\n", header);
 	}
 	g_clear_error (&err);
 	return FALSE;
@@ -184,7 +205,8 @@ check_server_response (SoupMessage *msg, gpointer state)
 	ret = soup_gss_client_step (conn, auth_headers + 10, &err);
 
 	if (ret != AUTH_GSS_COMPLETE) {
-		g_warning ("%s", err->message);
+		if (err)
+			g_warning ("%s", err->message);
 		conn->state = SOUP_NEGOTIATE_FAILED;
 	}
  out:
@@ -212,17 +234,6 @@ soup_auth_negotiate_get_connection_authorization (SoupConnectionAuth *auth,
 		conn->response_header = NULL;
 		conn->state = SOUP_NEGOTIATE_SENT_RESPONSE;
 	}
-
-	g_signal_connect (msg,
-			  "finished",
-			  G_CALLBACK (remove_server_response_handler),
-			  conn);
-
-	/* Wait for the 2xx response to verify server response */
-	g_signal_connect (msg,
-			  "got_headers",
-			  G_CALLBACK (check_server_response),
-			  conn);
 
 	return header;
 }
