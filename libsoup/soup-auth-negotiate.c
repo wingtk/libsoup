@@ -23,6 +23,13 @@
 #include "soup-misc.h"
 #include "soup-uri.h"
 
+typedef struct {
+	gulong got_headers_signal_id;
+} SoupAuthNegotiatePrivate;
+#define SOUP_AUTH_NEGOTIATE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SOUP_TYPE_AUTH_NEGOTIATE, SoupAuthNegotiatePrivate))
+
+G_DEFINE_TYPE (SoupAuthNegotiate, soup_auth_negotiate, SOUP_TYPE_CONNECTION_AUTH)
+
 #define AUTH_GSS_ERROR      -1
 #define AUTH_GSS_COMPLETE    1
 #define AUTH_GSS_CONTINUE    0
@@ -61,8 +68,6 @@ static const gss_OID_desc gss_mech_spnego = { 6, (void *) &spnego_OID };
 
 static GSList *trusted_uris;
 
-G_DEFINE_TYPE (SoupAuthNegotiate, soup_auth_negotiate, SOUP_TYPE_CONNECTION_AUTH)
-
 static void
 soup_auth_negotiate_init (SoupAuthNegotiate *negotiate)
 {
@@ -78,11 +83,15 @@ static void
 soup_auth_negotiate_free_connection_state (SoupConnectionAuth *auth,
 					   gpointer state)
 {
+	SoupAuthNegotiate *negotiate = SOUP_AUTH_NEGOTIATE (auth);
+	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (negotiate);
 	SoupNegotiateConnectionState *conn = state;
 
 	soup_gss_client_cleanup (conn);
 
 	g_free (conn->response_header);
+
+	priv->got_headers_signal_id = 0;
 }
 
 static void
@@ -95,9 +104,11 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 				       const char *header, gpointer state)
 {
 	SoupNegotiateConnectionState *conn = state;
+	SoupAuthNegotiate *negotiate = SOUP_AUTH_NEGOTIATE (auth);
+	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (negotiate);
 	GError *err = NULL;
 
-	if (!check_auth_trusted_uri (SOUP_AUTH_NEGOTIATE (auth), msg)) {
+	if (!check_auth_trusted_uri (negotiate, msg)) {
 		conn->state = SOUP_NEGOTIATE_FAILED;
 
 		return FALSE;
@@ -254,6 +265,8 @@ soup_auth_negotiate_class_init (SoupAuthNegotiateClass *auth_negotiate_class)
 	SoupAuthClass *auth_class = SOUP_AUTH_CLASS (auth_negotiate_class);
 	SoupConnectionAuthClass *conn_auth_class =
 			SOUP_CONNECTION_AUTH_CLASS (auth_negotiate_class);
+
+	g_type_class_add_private (auth_negotiate_class, sizeof (SoupAuthNegotiatePrivate));
 
 	auth_class->scheme_name = "Negotiate";
 	auth_class->strength = 7;
