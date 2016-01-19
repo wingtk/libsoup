@@ -150,7 +150,6 @@ soup_auth_negotiate_get_protection_space (SoupAuth *auth, SoupURI *source_uri)
 
 	space = g_strdup (source_uri->path);
 
-	/* FIXME does https://bugzilla.gnome.org/show_bug.cgi?id=755617 apply here as well? */
 	/* Strip filename component */
 	p = strrchr (space, '/');
 	if (p && p != space && p[1])
