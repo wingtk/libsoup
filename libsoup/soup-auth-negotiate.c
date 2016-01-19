@@ -213,7 +213,7 @@ check_server_response (SoupMessage *msg, gpointer state)
 }
 
 static void
-remove_server_response_handler(SoupMessage *msg, gpointer state)
+remove_server_response_handler (SoupMessage *msg, gpointer state)
 {
 	g_signal_handlers_disconnect_by_func (msg,
 					      G_CALLBACK (check_server_response),
