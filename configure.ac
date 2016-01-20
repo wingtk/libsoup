@@ -321,6 +321,8 @@ AC_DEFINE_UNQUOTED(NTLM_AUTH, "$ntlm_auth", [Samba's 'winbind' daemon helper 'nt
 
 AX_CODE_COVERAGE
 
+have_gssapi=""
+
 dnl **********************
 dnl *** GSSAPI support ***
 dnl **********************
@@ -332,6 +334,7 @@ if test "x$KRB5_CONFIG" != "xnone"; then
     AC_SUBST(KRB5_LIBS)
     if test "$KRB5_CONFIG" != none; then
         AC_DEFINE(HAVE_GSSAPI, 1, [Whether or not gssapi libs are available])
+	have_gssapi="1"
     fi
 fi
 
@@ -390,6 +393,8 @@ AC_SUBST(SOUP_HIDDEN_VISIBILITY_CFLAGS)
 dnl *************************
 dnl *** Output Everything ***
 dnl *************************
+
+AC_SUBST(have_gssapi)
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
