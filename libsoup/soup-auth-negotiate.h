@@ -6,7 +6,7 @@
 #ifndef SOUP_AUTH_NEGOTIATE_H
 #define SOUP_AUTH_NEGOTIATE_H 1
 
-#if HAVE_GSSAPI
+#if LIBSOUP_HAVE_GSSAPI
 
 #include "soup-connection-auth.h"
 
@@ -26,6 +26,6 @@ typedef struct {
 
 } SoupAuthNegotiateClass;
 
-#endif /* HAVE_GSSAPI */
+#endif /* LIBSOUP_HAVE_GSSAPI */
 
 #endif /* SOUP_AUTH_NEGOTIATE_H */

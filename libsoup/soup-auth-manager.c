@@ -19,7 +19,7 @@
 #include "soup-path-map.h"
 #include "soup-session-private.h"
 
-#if HAVE_GSSAPI
+#if LIBSOUP_HAVE_GSSAPI
 #include "soup-auth-negotiate.h"
 #endif
 
@@ -489,7 +489,7 @@ authenticate_auth (SoupAuthManager *manager, SoupAuth *auth,
 	} else
 		uri = soup_message_get_uri (msg);
 
-#if HAVE_GSSAPI
+#if LIBSOUP_HAVE_GSSAPI
 	if (SOUP_IS_AUTH_NEGOTIATE (auth))
 		return;
 #endif

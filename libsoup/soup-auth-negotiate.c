@@ -9,7 +9,7 @@
 #include <config.h>
 #endif
 
-#if HAVE_GSSAPI
+#if LIBSOUP_HAVE_GSSAPI
 
 #include <string.h>
 
@@ -550,4 +550,4 @@ soup_gss_client_cleanup (SoupNegotiateConnectionState *conn)
 
 	gss_release_name (&min_stat, &conn->server_name);
 }
-#endif /* HAVE_GSSAPI */
+#endif /* LIBSOUP_HAVE_GSSAPI */

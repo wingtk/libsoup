@@ -94,7 +94,7 @@ get_url (const char *url)
 
 static const char *ca_file, *proxy;
 static gboolean synchronous, ntlm;
-#if HAVE_GSSAPI
+#if LIBSOUP_HAVE_GSSAPI
 static gboolean negotiate;
 #endif
 
@@ -111,7 +111,7 @@ static GOptionEntry entries[] = {
 	{ "ntlm", 'n', 0,
 	  G_OPTION_ARG_NONE, &ntlm,
 	  "Use NTLM authentication", NULL },
-#if HAVE_GSSAPI
+#if LIBSOUP_HAVE_GSSAPI
 	{ "negotiate", 'N', 0,
 	  G_OPTION_ARG_NONE, &negotiate,
 	  "Use Negotiate authentication", NULL },
@@ -195,7 +195,7 @@ main (int argc, char **argv)
 		soup_uri_free (proxy_uri);
 	}
 
-#if HAVE_GSSAPI
+#if LIBSOUP_HAVE_GSSAPI
 	if (negotiate) {
 		soup_session_add_feature_by_type(session,
 						 SOUP_TYPE_AUTH_NEGOTIATE);
