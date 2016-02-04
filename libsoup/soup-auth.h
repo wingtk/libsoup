@@ -6,8 +6,6 @@
 #ifndef SOUP_AUTH_H
 #define SOUP_AUTH_H 1
 
-#include <config.h>
-
 #include <libsoup/soup-types.h>
 #include <libsoup/soup-headers.h>
 
