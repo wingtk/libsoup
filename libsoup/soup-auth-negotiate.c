@@ -36,7 +36,7 @@ G_DEFINE_TYPE (SoupAuthNegotiate, soup_auth_negotiate, SOUP_TYPE_CONNECTION_AUTH
 
 typedef enum {
 	SOUP_NEGOTIATE_NEW,
-	SOUP_NEGOTIATE_RECEIVED_CHALLENGE, /* received intial negotiate header */
+	SOUP_NEGOTIATE_RECEIVED_CHALLENGE, /* received initial negotiate header */
 	SOUP_NEGOTIATE_SENT_RESPONSE,      /* sent response to server */
 	SOUP_NEGOTIATE_FAILED
 } SoupNegotiateState;
@@ -317,7 +317,7 @@ parse_trusted_uris (void)
 	for (i = 0; i < g_strv_length (uris); i++) {
 		SoupURI *uri;
 
-		/* Is the supplied URI is valid append it to the list */
+		/* If the supplied URI is valid, append it to the list */
 		if ((uri = soup_uri_new (uris[i])))
 			trusted_uris = g_slist_append (trusted_uris, uri);
 	}
