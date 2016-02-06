@@ -382,7 +382,7 @@ check_auth_trusted_uri (SoupAuthNegotiate *negotiate, SoupMessage *msg)
 
 	/* If no trusted uris are set, we allow all https uris */
 	if (!trusted_uris)
-                return g_ascii_strncasecmp (msg_uri->scheme, "https", 5) == 0;
+		return msg_uri->scheme == SOUP_URI_SCHEME_HTTPS;
 
 	matched = g_slist_find_custom (trusted_uris,
 				       msg_uri,
