@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include <gssapi/gssapi.h>
-#include <gssapi/gssapi_krb5.h>
 
 #include "soup-auth-negotiate.h"
 #include "soup-headers.h"
