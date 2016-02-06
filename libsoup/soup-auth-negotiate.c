@@ -304,6 +304,7 @@ parse_trusted_uris (void)
 	gchar **uris = NULL;
 	const gchar *env;
 	gint i;
+	guint length;
 
 	/* Initialize the list */
 	trusted_uris = NULL;
@@ -314,12 +315,13 @@ parse_trusted_uris (void)
 	if (!(uris = g_strsplit (env, ",", -1)))
 		return;
 
-	for (i = 0; i < g_strv_length (uris); i++) {
+	length = g_strv_length (uris);
+	for (i = 0; i < length; i++) {
 		SoupURI *uri;
 
 		/* If the supplied URI is valid, append it to the list */
 		if ((uri = soup_uri_new (uris[i])))
-			trusted_uris = g_slist_append (trusted_uris, uri);
+			trusted_uris = g_slist_prepend (trusted_uris, uri);
 	}
 
 	g_strfreev (uris);
