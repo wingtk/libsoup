@@ -197,8 +197,8 @@ main (int argc, char **argv)
 
 #if LIBSOUP_HAVE_GSSAPI
 	if (negotiate) {
-		soup_session_add_feature_by_type(session,
-						 SOUP_TYPE_AUTH_NEGOTIATE);
+		soup_session_add_feature_by_type (session,
+						  SOUP_TYPE_AUTH_NEGOTIATE);
 	}
 #endif
 
