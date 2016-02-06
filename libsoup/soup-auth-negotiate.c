@@ -93,10 +93,8 @@ soup_auth_negotiate_free_connection_state (SoupConnectionAuth *auth,
 	priv->got_headers_signal_id = 0;
 }
 
-static void
-remove_server_response_handler (SoupMessage *msg, gpointer state);
-static void
-check_server_response (SoupMessage *msg, gpointer state);
+static void remove_server_response_handler (SoupMessage *msg, gpointer state);
+static void check_server_response (SoupMessage *msg, gpointer state);
 
 static gboolean
 soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *msg,
@@ -142,7 +140,7 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 			 * soup_message_get_error_message  */
 			g_warning ("gssapi step failed: %s", err->message);
 		}
-	} else if (!strncmp(header, "Negotiate ", 10)) {
+	} else if (!strncmp (header, "Negotiate ", 10)) {
 		if (soup_gss_client_step (conn, header + 10, &err) == AUTH_GSS_CONTINUE) {
 			conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
 			return TRUE;
