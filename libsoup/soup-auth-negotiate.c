@@ -446,7 +446,7 @@ soup_gss_error (OM_uint32 err_maj, OM_uint32 err_min, GError **err)
 		if (err && *err == NULL) {
 			g_set_error (err,
 				     SOUP_HTTP_ERROR,
-				     SOUP_STATUS_GSSAPI_FAILED,
+				     SOUP_STATUS_UNAUTHORIZED,
 				     "%s %s",
 				     buf_maj,
 				     buf_min ? buf_min : "");
