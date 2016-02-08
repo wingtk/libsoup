@@ -71,7 +71,7 @@ static int soup_gss_client_step (SoupNegotiateConnectionState *conn,
 				 const char *host, GError **err);
 
 static const char spnego_OID[] = "\x2b\x06\x01\x05\x05\x02";
-static const gss_OID_desc gss_mech_spnego = { sizeof (spnego_OID), (void *) &spnego_OID };
+static const gss_OID_desc gss_mech_spnego = { sizeof (spnego_OID) - 1, (void *) &spnego_OID };
 
 static GSList *trusted_uris;
 
