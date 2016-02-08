@@ -158,9 +158,8 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 			conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
 			return TRUE;
 		}
-	} else {
-		g_warning("Bogus hdr '%s'\n", header);
 	}
+
 	g_clear_error (&err);
 	return FALSE;
 #else
