@@ -544,7 +544,7 @@ out:
 	return ret;
 }
 
-G_MODULE_EXPORT void
+static void
 soup_gss_client_cleanup (SoupNegotiateConnectionState *conn)
 {
 	OM_uint32 min_stat;
