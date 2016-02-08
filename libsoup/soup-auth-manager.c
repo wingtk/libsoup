@@ -13,15 +13,12 @@
 
 #include "soup-auth-manager.h"
 #include "soup.h"
+#include "soup-auth-negotiate.h"
 #include "soup-connection-auth.h"
 #include "soup-message-private.h"
 #include "soup-message-queue.h"
 #include "soup-path-map.h"
 #include "soup-session-private.h"
-
-#if LIBSOUP_HAVE_GSSAPI
-#include "soup-auth-negotiate.h"
-#endif
 
 /**
  * SECTION:soup-auth-manager
@@ -489,10 +486,8 @@ authenticate_auth (SoupAuthManager *manager, SoupAuth *auth,
 	} else
 		uri = soup_message_get_uri (msg);
 
-#if LIBSOUP_HAVE_GSSAPI
 	if (SOUP_IS_AUTH_NEGOTIATE (auth))
 		return;
-#endif
 
 	/* If a password is specified explicitly in the URI, use it
 	 * even if the auth had previously already been authenticated.

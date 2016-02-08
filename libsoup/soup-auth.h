@@ -115,10 +115,8 @@ GType soup_auth_digest_get_type (void);
 #define SOUP_TYPE_AUTH_NTLM   (soup_auth_ntlm_get_type ())
 SOUP_AVAILABLE_IN_2_4
 GType soup_auth_ntlm_get_type   (void);
-#if LIBSOUP_HAVE_GSSAPI
 #define SOUP_TYPE_AUTH_NEGOTIATE  (soup_auth_negotiate_get_type ())
 GType soup_auth_negotiate_get_type   (void);
-#endif
 
 /* Deprecated SoupPasswordManager-related APIs: all are now no-ops */
 SOUP_AVAILABLE_IN_2_28
@@ -138,6 +136,8 @@ SOUP_DEPRECATED_IN_2_28
 void        soup_auth_has_saved_password (SoupAuth   *auth,
 					  const char *username,
 					  const char *password);
+
+extern const gboolean soup_auth_negotiate_supported;
 
 G_END_DECLS
 
