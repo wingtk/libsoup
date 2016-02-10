@@ -305,44 +305,18 @@ remove_server_response_handler (SoupMessage *msg, gpointer state)
 					      state);
 }
 
-/* check if scheme://host:port from msg matches the trusted uri */
+/* Check if scheme://host:port from message matches the given URI. */
 static gint
-match_base_uri (SoupURI *trusted_uri, SoupURI *msg_uri)
+match_base_uri (SoupURI *list_uri, SoupURI *msg_uri)
 {
-	if (msg_uri->scheme != trusted_uri->scheme)
+	if (msg_uri->scheme != list_uri->scheme)
 		return 1;
 
-	if (trusted_uri->port && (msg_uri->port != trusted_uri->port))
+	if (list_uri->port && (msg_uri->port != list_uri->port))
 		return 1;
 
-	if (trusted_uri->host) {
-		const gchar *msg_host = NULL;
-		const gchar *trusted_host = NULL;
-
-		msg_host = soup_uri_get_host (msg_uri);
-		trusted_host = soup_uri_get_host (trusted_uri);
-
-		if (g_str_has_suffix (msg_host, trusted_host)) {
-			/* if the msg host ends with host from the trusted uri, then make
-			 * sure it is either an exact match, or prefixed with a dot. We
-			 * don't want "foobar.com" to match "bar.com"
-			 */
-			if (g_ascii_strcasecmp (msg_host, trusted_host) == 0) {
-				return 0;
-			} else {
-				gint trusted_host_len, msg_host_len;
-
-				/* we don't want example.com to match fooexample.com */
-				trusted_host_len = strlen (trusted_host);
-				msg_host_len = strlen (msg_host);
-				if (msg_host[msg_host_len - trusted_host_len - 1] == '.') {
-					return 0;
-				}
-			}
-		}
-
-		return 1;
-	}
+	if (list_uri->host)
+		return !soup_host_matches_host (msg_uri->host, list_uri->host);
 
 	return 0;
 }
