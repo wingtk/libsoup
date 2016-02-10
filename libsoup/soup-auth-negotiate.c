@@ -74,8 +74,9 @@ static const char spnego_OID[] = "\x2b\x06\x01\x05\x05\x02";
 static const gss_OID_desc gss_mech_spnego = { sizeof (spnego_OID) - 1, (void *) &spnego_OID };
 
 static GSList *trusted_uris;
+static GSList *blacklisted_uris;
 
-static void parse_trusted_uris (void);
+static void parse_uris_from_env_variable (const gchar *env_variable, GSList **list);
 
 static void check_server_response (SoupMessage *msg, gpointer state);
 static void remove_server_response_handler (SoupMessage *msg, gpointer state);
@@ -261,7 +262,8 @@ soup_auth_negotiate_class_init (SoupAuthNegotiateClass *auth_negotiate_class)
 	conn_auth_class->is_connection_ready = soup_auth_negotiate_is_connection_ready;
 
 #ifdef LIBSOUP_HAVE_GSSAPI
-	parse_trusted_uris ();
+	parse_uris_from_env_variable ("SOUP_GSSAPI_TRUSTED_URIS", &trusted_uris);
+	parse_uris_from_env_variable ("SOUP_GSSAPI_BLACKLISTED_URIS", &blacklisted_uris);
 #endif /* LIBSOUP_HAVE_GSSAPI */
 }
 
@@ -323,7 +325,7 @@ match_base_uri (SoupURI *list_uri, SoupURI *msg_uri)
 
 /* Parses a comma separated list of URIS from the environment. */
 static void
-parse_trusted_uris (void)
+parse_uris_from_env_variable (const gchar *env_variable, GSList **list)
 {
 	gchar **uris = NULL;
 	const gchar *env;
@@ -331,9 +333,9 @@ parse_trusted_uris (void)
 	guint length;
 
 	/* Initialize the list */
-	trusted_uris = NULL;
+	*list = NULL;
 
-	if (!(env = g_getenv ("SOUP_AUTH_TRUSTED_URIS")))
+	if (!(env = g_getenv (env_variable)))
 		return;
 
 	if (!(uris = g_strsplit (env, ",", -1)))
@@ -345,7 +347,7 @@ parse_trusted_uris (void)
 
 		/* If the supplied URI is valid, append it to the list */
 		if ((uri = soup_uri_new (uris[i])))
-			trusted_uris = g_slist_prepend (trusted_uris, uri);
+			*list = g_slist_prepend (*list, uri);
 	}
 
 	g_strfreev (uris);
@@ -362,7 +364,12 @@ check_auth_trusted_uri (SoupAuthNegotiate *negotiate, SoupMessage *msg)
 
 	msg_uri = soup_message_get_uri (msg);
 
-	/* If no trusted uris are set, we allow all https uris */
+	/* First check if the URI is not on blacklist */
+	if (blacklisted_uris &&
+	    g_slist_find_custom (blacklisted_uris, msg_uri, (GCompareFunc) match_base_uri))
+		return FALSE;
+
+	/* If no trusted URIs are set, we allow all HTTPS URIs */
 	if (!trusted_uris)
 		return msg_uri->scheme == SOUP_URI_SCHEME_HTTPS;
 
