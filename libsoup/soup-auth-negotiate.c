@@ -106,6 +106,7 @@ soup_auth_negotiate_free_connection_state (SoupConnectionAuth *auth,
 	g_free (conn->response_header);
 
 	priv->got_headers_signal_id = 0;
+	g_slice_free (SoupNegotiateConnectionState, conn);
 }
 
 static gboolean
