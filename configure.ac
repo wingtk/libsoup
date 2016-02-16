@@ -324,14 +324,27 @@ AX_CODE_COVERAGE
 dnl **********************
 dnl *** GSSAPI support ***
 dnl **********************
-AC_PATH_PROG([KRB5_CONFIG], krb5-config, none, $PATH:/usr/kerberos/bin)
-if test "x$KRB5_CONFIG" != "xnone"; then
-    KRB5_LIBS="`${KRB5_CONFIG} --libs gssapi`"
-    KRB5_CFLAGS="`${KRB5_CONFIG} --cflags gssapi`"
-    AC_SUBST(KRB5_CFLAGS)
-    AC_SUBST(KRB5_LIBS)
-    if test "$KRB5_CONFIG" != none; then
-        AC_DEFINE(LIBSOUP_HAVE_GSSAPI, 1, [Whether or not gssapi libs are available])
+AC_ARG_WITH(gssapi,
+	    AS_HELP_STRING([--with-gssapi],
+	    [Build with GSSAPI support [default=auto]]),
+	    [if test $os_win32 = yes; then gssapi="no"; else gssapi="yes"; fi])
+
+if test "$with_gssapi" != "no"; then
+    AC_ARG_WITH(krb5-config,
+		AS_HELP_STRING([--with-krb5-config=PATH],[Where to look for krb5-config, path points to krb5-config installation (default: /usr/kerberos/bin/)]),
+		KRB5_CONFIG="$withval",
+		[AC_PATH_PROGS(KRB5_CONFIG, krb5-config, no, ${PATH}:/usr/kerberos/bin)])
+
+    if test "$KRB5_CONFIG" != "no"; then
+	KRB5_LIBS="`${KRB5_CONFIG} --libs gssapi`"
+	KRB5_CFLAGS="`${KRB5_CONFIG} --cflags gssapi`"
+	AC_SUBST(KRB5_CFLAGS)
+	AC_SUBST(KRB5_LIBS)
+	if test "$KRB5_CONFIG" != none; then
+	    AC_DEFINE(LIBSOUP_HAVE_GSSAPI, 1, [Whether or not GSSAPI libs are available])
+	fi
+    else
+	AC_MSG_ERROR([GSSAPI support requested but failed to found krb5-config. Try to set KRB5_CONFIG.])
     fi
 fi
 
