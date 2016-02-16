@@ -122,8 +122,7 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 
 	if (!check_auth_trusted_uri (negotiate, msg)) {
 		conn->state = SOUP_NEGOTIATE_FAILED;
-
-		return FALSE;
+		return TRUE;
 	}
 
 	/* Found negotiate header with no token, start negotiate */
@@ -132,7 +131,7 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 			/* If we were already negotiating and we get a 401
 			 * with no token, that means we failed. */
 			conn->state = SOUP_NEGOTIATE_FAILED;
-			return FALSE;
+			return TRUE;
 		}
 		conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
 		if (soup_gss_build_response (conn, SOUP_AUTH (auth), &err)) {
@@ -163,12 +162,9 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 	}
 
 	g_clear_error (&err);
-	return FALSE;
-#else
-	conn->state = SOUP_NEGOTIATE_FAILED;
-
-	return FALSE;
 #endif /* LIBSOUP_HAVE_GSSAPI */
+	conn->state = SOUP_NEGOTIATE_FAILED;
+	return TRUE;
 }
 
 static GSList *
