@@ -428,7 +428,7 @@ soup_gss_error (OM_uint32 err_maj, OM_uint32 err_min, GError **err)
 			g_set_error (err,
 				     SOUP_HTTP_ERROR,
 				     SOUP_STATUS_UNAUTHORIZED,
-				     "%s %s",
+				     "%s: %s",
 				     buf_maj,
 				     buf_min ? buf_min : "");
 		}
