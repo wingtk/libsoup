@@ -251,7 +251,7 @@ const char soup_char_attributes[] = {
  *
  * Return value: %TRUE if the hosts match, %FALSE otherwise
  *
- * Since: 2.53
+ * Since: 2.54
  **/
 gboolean
 soup_host_matches_host (const gchar *host, const gchar *compare_with)
