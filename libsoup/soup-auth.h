@@ -138,7 +138,8 @@ void        soup_auth_has_saved_password (SoupAuth   *auth,
 					  const char *username,
 					  const char *password);
 
-extern const gboolean soup_auth_negotiate_supported;
+SOUP_AVAILABLE_IN_2_54
+const gboolean soup_auth_negotiate_supported;
 
 G_END_DECLS
 
