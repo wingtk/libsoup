@@ -301,6 +301,9 @@ check_server_response (SoupMessage *msg, gpointer auth)
 	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (negotiate);
 	SoupNegotiateConnectionState *conn = priv->conn_state;
 
+	if (auth != soup_message_get_auth (msg))
+		return;
+
 	if (msg->status_code == SOUP_STATUS_UNAUTHORIZED)
 		return;
 
