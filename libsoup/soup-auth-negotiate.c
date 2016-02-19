@@ -286,7 +286,9 @@ check_server_response (SoupMessage *msg, gpointer state)
 
 	ret = soup_gss_client_step (conn, auth_headers + 10, &err);
 
-	if (ret != AUTH_GSS_COMPLETE) {
+	if (ret == AUTH_GSS_CONTINUE) {
+		conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
+	} else if (ret == AUTH_GSS_ERROR) {
 		if (err)
 			g_warning ("%s", err->message);
 		conn->state = SOUP_NEGOTIATE_FAILED;
