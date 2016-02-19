@@ -54,8 +54,12 @@ typedef struct {
 } SoupNegotiateConnectionState;
 
 typedef struct {
+	gboolean is_authenticated;
+
 	gulong message_finished_signal_id;
 	gulong message_got_headers_signal_id;
+
+	SoupNegotiateConnectionState *conn_state;
 } SoupAuthNegotiatePrivate;
 
 #define SOUP_AUTH_NEGOTIATE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SOUP_TYPE_AUTH_NEGOTIATE, SoupAuthNegotiatePrivate))
@@ -80,7 +84,7 @@ static GSList *blacklisted_uris;
 
 static void parse_uris_from_env_variable (const gchar *env_variable, GSList **list);
 
-static void check_server_response (SoupMessage *msg, gpointer state);
+static void check_server_response (SoupMessage *msg, gpointer auth);
 static void remove_server_response_handler (SoupMessage *msg, gpointer auth);
 #endif /* LIBSOUP_HAVE_GSSAPI */
 
@@ -91,12 +95,20 @@ soup_auth_negotiate_init (SoupAuthNegotiate *negotiate)
 
 	priv->message_got_headers_signal_id = 0;
 	priv->message_finished_signal_id = 0;
+	priv->is_authenticated = FALSE;
 }
 
 static gpointer
 soup_auth_negotiate_create_connection_state (SoupConnectionAuth *auth)
 {
-	return g_slice_new0 (SoupNegotiateConnectionState);
+	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (auth);
+	SoupNegotiateConnectionState *conn;
+
+	conn = g_slice_new0 (SoupNegotiateConnectionState);
+	conn->state = SOUP_NEGOTIATE_NEW;
+	priv->conn_state = conn;
+
+	return conn;
 }
 
 static void
@@ -113,6 +125,7 @@ soup_auth_negotiate_free_connection_state (SoupConnectionAuth *auth,
 	g_free (conn->response_header);
 
 	g_slice_free (SoupNegotiateConnectionState, conn);
+	priv->conn_state = NULL;
 }
 
 static gboolean
@@ -155,7 +168,7 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 				id = g_signal_connect (msg,
 						       "got_headers",
 						       G_CALLBACK (check_server_response),
-						       conn);
+						       auth);
 				priv->message_got_headers_signal_id = id;
 			}
 			return TRUE;
@@ -198,24 +211,21 @@ static void
 soup_auth_negotiate_authenticate (SoupAuth *auth, const char *username,
 				  const char *password)
 {
-	/* FIXME mark auth as not authenticated */
+	SoupAuthNegotiate *negotiate = SOUP_AUTH_NEGOTIATE (auth);
+	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (negotiate);
+
+	/* It is not possible to authenticate with username and password. */
+	priv->is_authenticated = FALSE;
 }
 
 static gboolean
 soup_auth_negotiate_is_authenticated (SoupAuth *auth)
 {
-	gboolean has_credentials = FALSE;
-#ifdef LIBSOUP_HAVE_GSSAPI
-	GError *err = NULL;
+	SoupAuthNegotiate *negotiate = SOUP_AUTH_NEGOTIATE (auth);
+	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (negotiate);
 
-	has_credentials = soup_gss_client_inquire_cred (auth, &err);
-
-	if (err)
-		g_warning ("%s", err->message);
-
-	g_clear_error (&err);
-#endif /* LIBSOUP_HAVE_GSSAPI */
-	return has_credentials;
+	/* We are authenticated just in case we received the GSS_S_COMPLETE. */
+	return priv->is_authenticated;
 }
 
 static char *
@@ -275,12 +285,14 @@ soup_auth_negotiate_class_init (SoupAuthNegotiateClass *auth_negotiate_class)
 
 #ifdef LIBSOUP_HAVE_GSSAPI
 static void
-check_server_response (SoupMessage *msg, gpointer state)
+check_server_response (SoupMessage *msg, gpointer auth)
 {
 	gint ret;
 	const char *auth_headers;
 	GError *err = NULL;
-	SoupNegotiateConnectionState *conn = state;
+	SoupAuthNegotiate *negotiate = auth;
+	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (negotiate);
+	SoupNegotiateConnectionState *conn = priv->conn_state;
 
 	if (msg->status_code == SOUP_STATUS_UNAUTHORIZED)
 		return;
@@ -295,6 +307,8 @@ check_server_response (SoupMessage *msg, gpointer state)
 	}
 
 	ret = soup_gss_client_step (conn, auth_headers + 10, &err);
+
+	priv->is_authenticated = ret == AUTH_GSS_COMPLETE;
 
 	if (ret == AUTH_GSS_CONTINUE) {
 		conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
