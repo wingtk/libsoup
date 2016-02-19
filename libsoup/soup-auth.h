@@ -48,6 +48,8 @@ typedef struct {
 	gboolean     (*is_ready)             (SoupAuth      *auth,
 					      SoupMessage   *msg);
 
+	gboolean     (*can_authenticate)     (SoupAuth      *auth);
+
 	/* Padding for future expansion */
 	void (*_libsoup_reserved2) (void);
 	void (*_libsoup_reserved3) (void);
@@ -92,6 +94,8 @@ gboolean    soup_auth_is_authenticated      (SoupAuth      *auth);
 SOUP_AVAILABLE_IN_2_42
 gboolean    soup_auth_is_ready              (SoupAuth      *auth,
 					     SoupMessage   *msg);
+SOUP_AVAILABLE_IN_2_54
+gboolean    soup_auth_can_authenticate      (SoupAuth      *auth);
 
 SOUP_AVAILABLE_IN_2_4
 char       *soup_auth_get_authorization     (SoupAuth      *auth, 

@@ -13,7 +13,6 @@
 
 #include "soup-auth-manager.h"
 #include "soup.h"
-#include "soup-auth-negotiate.h"
 #include "soup-connection-auth.h"
 #include "soup-message-private.h"
 #include "soup-message-queue.h"
@@ -469,6 +468,9 @@ authenticate_auth (SoupAuthManager *manager, SoupAuth *auth,
 	SoupAuthManagerPrivate *priv = manager->priv;
 	SoupURI *uri;
 
+	if (!soup_auth_can_authenticate (auth))
+		return;
+
 	if (proxy) {
 		SoupMessageQueue *queue;
 		SoupMessageQueueItem *item;
@@ -485,9 +487,6 @@ authenticate_auth (SoupAuthManager *manager, SoupAuth *auth,
 			return;
 	} else
 		uri = soup_message_get_uri (msg);
-
-	if (SOUP_IS_AUTH_NEGOTIATE (auth))
-		return;
 
 	/* If a password is specified explicitly in the URI, use it
 	 * even if the auth had previously already been authenticated.

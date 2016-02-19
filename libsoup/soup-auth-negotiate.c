@@ -228,6 +228,12 @@ soup_auth_negotiate_is_authenticated (SoupAuth *auth)
 	return priv->is_authenticated;
 }
 
+static gboolean
+soup_auth_negotiate_can_authenticate (SoupAuth *auth)
+{
+	return FALSE;
+}
+
 static char *
 soup_auth_negotiate_get_connection_authorization (SoupConnectionAuth *auth,
 						  SoupMessage *msg,
@@ -270,6 +276,7 @@ soup_auth_negotiate_class_init (SoupAuthNegotiateClass *auth_negotiate_class)
 	auth_class->get_protection_space = soup_auth_negotiate_get_protection_space;
 	auth_class->authenticate = soup_auth_negotiate_authenticate;
 	auth_class->is_authenticated = soup_auth_negotiate_is_authenticated;
+	auth_class->can_authenticate = soup_auth_negotiate_can_authenticate;
 
 	conn_auth_class->create_connection_state = soup_auth_negotiate_create_connection_state;
 	conn_auth_class->free_connection_state = soup_auth_negotiate_free_connection_state;
