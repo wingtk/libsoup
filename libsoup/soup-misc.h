@@ -38,9 +38,6 @@ guint              soup_str_case_hash        (gconstpointer key);
 SOUP_AVAILABLE_IN_2_4
 gboolean           soup_str_case_equal       (gconstpointer v1,
 					      gconstpointer v2);
-SOUP_AVAILABLE_IN_2_54
-gboolean           soup_host_matches_host    (const gchar *host,
-					      const gchar *compare_with);
 
 #define _SOUP_ATOMIC_INTERN_STRING(variable, value) ((const char *)(g_atomic_pointer_get (&(variable)) ? (variable) : (g_atomic_pointer_set (&(variable), (gpointer)g_intern_static_string (value)), (variable))))
 
