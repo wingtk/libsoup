@@ -149,12 +149,11 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 
 	/* Found negotiate header with no token, start negotiate */
 	if (strcmp (header, "Negotiate") == 0) {
-		if (conn->state > SOUP_NEGOTIATE_RECEIVED_CHALLENGE) {
-			/* If we were already negotiating and we get a 401
-			 * with no token, that means we failed. */
-			conn->state = SOUP_NEGOTIATE_FAILED;
-			return TRUE;
-		}
+		/* If we were already negotiating and we get a 401
+		 * with no token, start again. */
+		if (conn->state == SOUP_NEGOTIATE_SENT_RESPONSE)
+			conn->initialized = FALSE;
+
 		conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
 		if (soup_gss_build_response (conn, SOUP_AUTH (auth), &err)) {
 			/* Register the callbacks just once */
