@@ -136,14 +136,15 @@ static gboolean
 soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *msg,
 				       const char *header, gpointer state)
 {
-	SoupNegotiateConnectionState *conn = state;
 #ifdef LIBSOUP_HAVE_GSSAPI
+	gboolean success = TRUE;
+	SoupNegotiateConnectionState *conn = state;
 	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (auth);
 	GError *err = NULL;
 
 	if (!check_auth_trusted_uri (auth, msg)) {
 		conn->state = SOUP_NEGOTIATE_FAILED;
-		return TRUE;
+		goto out;
 	}
 
 	/* Found negotiate header with no token, start negotiate */
@@ -175,7 +176,7 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 						       auth);
 				priv->message_got_headers_signal_id = id;
 			}
-			return TRUE;
+			goto out;
 		} else {
 			/* FIXME: report further upward via
 			 * soup_message_get_error_message  */
@@ -184,14 +185,17 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 	} else if (!strncmp (header, "Negotiate ", 10)) {
 		if (soup_gss_client_step (conn, header + 10, &err) == AUTH_GSS_CONTINUE) {
 			conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
-			return TRUE;
+			goto out;
 		}
 	}
 
-	g_clear_error (&err);
-#endif /* LIBSOUP_HAVE_GSSAPI */
 	conn->state = SOUP_NEGOTIATE_FAILED;
-	return TRUE;
+ out:
+	g_clear_error (&err);
+	return success;
+#else
+	return FALSE;
+#endif /* LIBSOUP_HAVE_GSSAPI */
 }
 
 static GSList *
