@@ -429,13 +429,14 @@ soup_gss_build_response (SoupNegotiateConnectionState *conn, SoupAuth *auth, GEr
 {
 	if (!conn->initialized) {
 		gchar *realm = NULL;
+
+		if (!soup_gss_client_init (conn, soup_auth_get_host (auth), err))
+			return FALSE;
+
 		if ((realm = soup_gss_client_get_realm (auth, NULL))) {
 			g_object_set (G_OBJECT (auth), SOUP_AUTH_REALM, realm, NULL);
 			g_free (realm);
 		}
-
-		if (!soup_gss_client_init (conn, soup_auth_get_host (auth), err))
-			return FALSE;
 	}
 
 	if (soup_gss_client_step (conn, "", err) != AUTH_GSS_CONTINUE)
