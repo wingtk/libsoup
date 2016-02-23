@@ -326,8 +326,7 @@ dnl *** GSSAPI support ***
 dnl **********************
 AC_ARG_WITH(gssapi,
 	    AS_HELP_STRING([--with-gssapi],
-	    [Build with GSSAPI support [default=auto]]),
-	    [if test $os_win32 = yes; then gssapi="no"; else gssapi="yes"; fi])
+	    [Build with GSSAPI support [default=auto]]))
 
 if test "$with_gssapi" != "no"; then
     AC_ARG_WITH(krb5-config,
@@ -344,7 +343,9 @@ if test "$with_gssapi" != "no"; then
 	    AC_DEFINE(LIBSOUP_HAVE_GSSAPI, 1, [Whether or not GSSAPI libs are available])
 	fi
     else
-	AC_MSG_ERROR([GSSAPI support requested but failed to found krb5-config. Try to set KRB5_CONFIG.])
+	if test "$with_gssapi" == "yes"; then
+	    AC_MSG_ERROR([GSSAPI support requested but failed to found krb5-config. Try to set KRB5_CONFIG.])
+	fi
     fi
 fi
 
