@@ -71,7 +71,6 @@ static gboolean check_auth_trusted_uri (SoupConnectionAuth *auth,
 static gboolean soup_gss_build_response (SoupNegotiateConnectionState *conn,
 					 SoupAuth *auth, GError **err);
 static void soup_gss_client_cleanup (SoupNegotiateConnectionState *conn);
-static gchar *soup_gss_client_get_realm (SoupAuth *auth, GError **err);
 static gboolean soup_gss_client_init (SoupNegotiateConnectionState *conn,
 				      const char *host, GError **err);
 static int soup_gss_client_step (SoupNegotiateConnectionState *conn,
@@ -95,11 +94,7 @@ static const gss_OID_desc gss_mech_ntlmssp_v1 = { sizeof (ntlmssp_v1_OID) - 1, (
 static void
 soup_auth_negotiate_init (SoupAuthNegotiate *negotiate)
 {
-	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (negotiate);
-
-	priv->message_got_headers_signal_id = 0;
-	priv->message_finished_signal_id = 0;
-	priv->is_authenticated = FALSE;
+	g_object_set (G_OBJECT (negotiate), SOUP_AUTH_REALM, "", NULL);
 }
 
 static gpointer
@@ -427,17 +422,9 @@ check_auth_trusted_uri (SoupConnectionAuth *auth, SoupMessage *msg)
 static gboolean
 soup_gss_build_response (SoupNegotiateConnectionState *conn, SoupAuth *auth, GError **err)
 {
-	if (!conn->initialized) {
-		gchar *realm = NULL;
-
+	if (!conn->initialized)
 		if (!soup_gss_client_init (conn, soup_auth_get_host (auth), err))
 			return FALSE;
-
-		if ((realm = soup_gss_client_get_realm (auth, NULL))) {
-			g_object_set (G_OBJECT (auth), SOUP_AUTH_REALM, realm, NULL);
-			g_free (realm);
-		}
-	}
 
 	if (soup_gss_client_step (conn, "", err) != AUTH_GSS_CONTINUE)
 		return FALSE;
@@ -488,69 +475,6 @@ soup_gss_error (OM_uint32 err_maj, OM_uint32 err_min, GError **err)
 		g_free (buf_min);
 		buf_min = buf_maj = NULL;
 	} while (!GSS_ERROR (maj_stat) && msg_ctx != 0);
-}
-
-static gchar *
-soup_gss_client_get_realm (SoupAuth *auth, GError **err)
-{
-	gchar *name = NULL, *realm = NULL;
-	OM_uint32 maj_stat, min_stat;
-	gss_name_t gss_name;
-	gss_buffer_desc out = GSS_C_EMPTY_BUFFER;
-	gss_OID_set mechanisms;
-
-	maj_stat = gss_inquire_cred (&min_stat,
-				     GSS_C_NO_CREDENTIAL,
-				     &gss_name,
-				     NULL,
-				     NULL,
-				     &mechanisms);
-
-	if (GSS_ERROR (maj_stat)) {
-		soup_gss_error (maj_stat, min_stat, err);
-		goto out;
-	}
-
-	if (maj_stat != GSS_S_COMPLETE)
-		goto out;
-
-	maj_stat = gss_display_name (&min_stat,
-				     gss_name,
-				     &out,
-				     NULL);
-
-	if (GSS_ERROR (maj_stat)) {
-		soup_gss_error (maj_stat, min_stat, err);
-		goto out;
-	}
-
-	if (maj_stat == GSS_S_COMPLETE)
-		name = g_strndup (out.value, out.length);
-
-	if (name && *name && mechanisms->count > 0) {
-		gss_OID oid = &mechanisms->elements[0];
-
-		if (gss_oid_equal (oid, (gss_OID) gss_mech_krb5) ||
-		    gss_oid_equal (oid, (gss_OID) gss_mech_krb5_old)) {
-			/* user@REALM */
-			const gchar *realm_start = strstr (name, "@");
-			if (realm_start && *realm_start)
-				realm = g_strdup (realm_start + 1);
-		} else if (gss_oid_equal (oid, (gss_OID) &gss_mech_ntlmssp_v1)) {
-			/* REALM/user */
-			const gchar *realm_end = strstr (name, "/");
-			if (realm_end)
-				realm = g_strndup (name, realm_end - name);
-		}
-	}
-	maj_stat = gss_release_oid_set(&min_stat, &mechanisms);
-	maj_stat = gss_release_buffer (&min_stat, &out);
- out:
-	maj_stat = gss_release_name (&min_stat, &gss_name);
-
-	g_free (name);
-
-	return realm;
 }
 
 static gboolean
