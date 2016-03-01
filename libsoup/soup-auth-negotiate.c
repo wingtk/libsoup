@@ -108,6 +108,15 @@ soup_auth_negotiate_create_connection_state (SoupConnectionAuth *auth)
 }
 
 static void
+free_connection_state_data (SoupNegotiateConnectionState *conn)
+{
+#ifdef LIBSOUP_HAVE_GSSAPI
+	soup_gss_client_cleanup (conn);
+#endif /* LIBSOUP_HAVE_GSSAPI */
+	g_free (conn->response_header);
+}
+
+static void
 soup_auth_negotiate_free_connection_state (SoupConnectionAuth *auth,
 					   gpointer state)
 {
@@ -115,10 +124,7 @@ soup_auth_negotiate_free_connection_state (SoupConnectionAuth *auth,
 	SoupAuthNegotiatePrivate *priv = SOUP_AUTH_NEGOTIATE_GET_PRIVATE (negotiate);
 	SoupNegotiateConnectionState *conn = state;
 
-#ifdef LIBSOUP_HAVE_GSSAPI
-	soup_gss_client_cleanup (conn);
-#endif /* LIBSOUP_HAVE_GSSAPI */
-	g_free (conn->response_header);
+	free_connection_state_data (conn);
 
 	g_slice_free (SoupNegotiateConnectionState, conn);
 	priv->conn_state = NULL;
@@ -143,8 +149,10 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 	if (strcmp (header, "Negotiate") == 0) {
 		/* If we were already negotiating and we get a 401
 		 * with no token, start again. */
-		if (conn->state == SOUP_NEGOTIATE_SENT_RESPONSE)
+		if (conn->state == SOUP_NEGOTIATE_SENT_RESPONSE) {
+			free_connection_state_data (conn);
 			conn->initialized = FALSE;
+		}
 
 		conn->state = SOUP_NEGOTIATE_RECEIVED_CHALLENGE;
 		if (soup_gss_build_response (conn, SOUP_AUTH (auth), &err)) {
@@ -566,8 +574,11 @@ out:
 static void
 soup_gss_client_cleanup (SoupNegotiateConnectionState *conn)
 {
-	OM_uint32 min_stat;
+	OM_uint32 maj_stat, min_stat;
 
 	gss_release_name (&min_stat, &conn->server_name);
+	maj_stat = gss_delete_sec_context (&min_stat, &conn->context, GSS_C_NO_BUFFER);
+	if (maj_stat != GSS_S_COMPLETE)
+		maj_stat = gss_delete_sec_context (&min_stat, &conn->context, GSS_C_NO_BUFFER);
 }
 #endif /* LIBSOUP_HAVE_GSSAPI */
