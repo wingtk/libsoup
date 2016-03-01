@@ -172,6 +172,7 @@ soup_auth_negotiate_update_connection (SoupConnectionAuth *auth, SoupMessage *ms
 			/* FIXME: report further upward via
 			 * soup_message_get_error_message  */
 			g_warning ("gssapi step failed: %s", err->message);
+			success = FALSE;
 		}
 	} else if (!strncmp (header, "Negotiate ", 10)) {
 		if (soup_gss_client_step (conn, header + 10, &err) == AUTH_GSS_CONTINUE) {
