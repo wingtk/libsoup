@@ -86,9 +86,6 @@ static void remove_server_response_handler (SoupMessage *msg, gpointer auth);
 
 static const char spnego_OID[] = "\x2b\x06\x01\x05\x05\x02";
 static const gss_OID_desc gss_mech_spnego = { sizeof (spnego_OID) - 1, (void *) &spnego_OID };
-
-static const char ntlmssp_v1_OID[] = "\x2b\x06\x01\x04\x01\x82\x37\x02\x02\x0a";
-static const gss_OID_desc gss_mech_ntlmssp_v1 = { sizeof (ntlmssp_v1_OID) - 1, (void *) &ntlmssp_v1_OID };
 #endif /* LIBSOUP_HAVE_GSSAPI */
 
 static void
