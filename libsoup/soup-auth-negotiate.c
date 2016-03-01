@@ -311,7 +311,7 @@ check_server_response (SoupMessage *msg, gpointer auth)
 	auth_headers = soup_message_headers_get_one (msg->response_headers,
 						     "WWW-Authenticate");
 	if (!auth_headers || g_ascii_strncasecmp (auth_headers, "Negotiate ", 10) != 0) {
-		g_warning ("Failed to parse auth header %s", auth_headers);
+		g_warning ("Failed to parse auth header");
 		conn->state = SOUP_NEGOTIATE_FAILED;
 		goto out;
 	}
