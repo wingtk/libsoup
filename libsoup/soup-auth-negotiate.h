@@ -1,6 +1,7 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 /*
  * Copyright (C) 2010 Guido Guenther <agx@sigxcpu.org>
+ * Copyright (C) 2016 Red Hat, Inc.
  */
 
 #ifndef SOUP_AUTH_NEGOTIATE_H

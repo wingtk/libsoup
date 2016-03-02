@@ -3,6 +3,7 @@
  * soup-auth-negotiate.c: HTTP Negotiate Authentication helper
  *
  * Copyright (C) 2009,2013 Guido Guenther <agx@sigxcpu.org>
+ * Copyright (C) 2016 Red Hat, Inc.
  */
 
 #ifdef HAVE_CONFIG_H
